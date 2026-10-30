@@ -430,14 +430,16 @@
     <footer>
         <p>&copy; 2026 EMRS Angan | Muni Seva Ashram. All rights reserved.</p>
     </footer>
-
-    <!-- DYNAMIC ROLE SWITCHER & SUPABASE BACKEND JS -->
+    
+<!-- DYNAMIC ROLE SWITCHER & SUPABASE BACKEND JS -->
     <script>
         // 🔑 REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
         const SUPABASE_URL = 'https://yykiwrkiddimqcpfuphj.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_jgRMw9AsmYFSJ-hn2_2R6A_YFiJ3Qtt';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Safe initialization preventing redeclaration errors
+        window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabaseClient;
 
         // Dynamic Role Switcher
         function handleRoleChange() {
