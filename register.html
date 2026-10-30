@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access - EMRS Angan</title>
+    <!-- Font Awesome Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* =========================================================
+           RESET & CORE STYLES
+           ========================================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #0b132b;
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* High-Res Green Ashram Campus Background */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+                linear-gradient(to bottom, rgba(11, 19, 43, 0.8), rgba(11, 19, 43, 0.92)),
+                url('https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=2000&q=85') center/cover no-repeat fixed;
+            z-index: -1;
+        }
+        /* =========================================================
+           HEADER LOGOS
+           ========================================================= */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 48px;
+            width: 100%;
+        }
+        .logo-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            padding: 8px 18px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .logo-badge:hover {
+            transform: translateY(-2px);
+            background: #ffffff;
+        }
+        .logo-badge img {
+            height: 46px;
+            width: auto;
+            object-fit: contain;
+        }
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-title {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #0f172a;
+        }
+        .logo-subtitle {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        /* =========================================================
+           MAIN REGISTRATION CARD
+           ========================================================= */
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            flex-grow: 1;
+        }
+        .register-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 44px 38px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.1);
+            position: relative;
+            animation: cardAppear 0.8s ease-out;
+        }
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .brand-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            color: #34d399;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .register-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        .register-header p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        /* Form Layout */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.83rem;
+            margin-bottom: 6px;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper i.icon-left {
+            position: absolute;
+            left: 14px;
+            color: #64748b;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+        .input-wrapper select {
+            cursor: pointer;
+        }
+        .input-wrapper select option {
+            background: #0f172a;
+            color: #ffffff;
+        }
+        .input-wrapper input::placeholder {
+            color: #64748b;
+        }
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            border-color: #34d399;
+            background: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.18);
+        }
+        .input-wrapper input:focus ~ i.icon-left, .input-wrapper select:focus ~ i.icon-left {
+            color: #34d399;
+        }
+        /* Role Dynamic Display Sections */
+        .role-fields {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .role-fields.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -4px rgba(5, 150, 105, 0.7);
+        }
+        /* Login Redirect Link */
+        .login-prompt {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .login-prompt a {
+            color: #34d399;
+            text-decoration: none;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .login-prompt a:hover {
+            text-decoration: underline;
+        }
+        /* =========================================================
+           FOOTER
+           ========================================================= */
+        footer {
+            text-align: center;
+            padding: 18px;
+            font-size: 0.82rem;
+            color: #64748b;
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        @media (max-width: 600px) {
+            header { padding: 16px 20px; }
+            .logo-text { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .register-card { padding: 32px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+
+    <!-- HEADER LOGOS -->
+    <header>
+        <a href="index.html" class="logo-badge" id="emrs-logo-box">
+            <img src="EMRS_Logo.png" alt="EMRS Logo">
+            <div class="logo-text">
+                <span class="logo-title">EMRS</span>
+                <span class="logo-subtitle">Residential School</span>
+            </div>
+        </a>
+        <a href="index.html" class="logo-badge" id="msa-logo-box">
+            <img src="muni_seva_ashram.jpg" alt="Muni Seva Ashram Logo">
+            <div class="logo-text">
+                <span class="logo-title">MSA</span>
+                <span class="logo-subtitle">Muni Seva Ashram</span>
+            </div>
+        </a>
+    </header>
+
+    <!-- MAIN REGISTRATION FORM -->
+    <main>
+        <div class="register-card">
+            <div class="register-header">
+                <div class="brand-pill"><i class="fa-solid fa-user-plus"></i> Access Request</div>
+                <h1>Join EMRS Angan</h1>
+                <p>Submit your details for institutional approval</p>
+            </div>
+
+            <!-- REGISTRATION FORM START -->
+            <form id="registerForm">
+                
+                <!-- Full Name -->
+                <div class="input-group">
+                    <label for="fullname">Full Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="fullname" name="fullname" placeholder="e.g. Rahul Sharma" required>
+                        <i class="fa-solid fa-user icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- Email Address -->
+                <div class="input-group">
+                    <label for="email">Institutional Email / Username</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" name="email" placeholder="student@emrsangan.edu.in" required>
+                        <i class="fa-solid fa-envelope icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- Role Selection -->
+                <div class="input-group">
+                    <label for="role">Select Your Role</label>
+                    <div class="input-wrapper">
+                        <select id="role" name="role" required onchange="handleRoleChange()">
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher / Faculty</option>
+                            <option value="hostel_mgmt">Hostel Management</option>
+                        </select>
+                        <i class="fa-solid fa-user-tag icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC FIELD 1: STUDENT (CLASS SELECTION) -->
+                <div class="input-group role-fields active" id="studentFields">
+                    <label for="class_grade">Grade / Class</label>
+                    <div class="input-wrapper">
+                        <select id="class_grade" name="class_grade">
+                            <option value="Class 6">Class 6</option>
+                            <option value="Class 7">Class 7</option>
+                            <option value="Class 8">Class 8</option>
+                            <option value="Class 9">Class 9</option>
+                            <option value="Class 10">Class 10</option>
+                            <option value="Class 11 - Science">Class 11 (Science)</option>
+                            <option value="Class 11 - General">Class 11 (General)</option>
+                            <option value="Class 12 - Science">Class 12 (Science)</option>
+                            <option value="Class 12 - General">Class 12 (General)</option>
+                        </select>
+                        <i class="fa-solid fa-graduation-cap icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC FIELD 2: TEACHER (SUBJECT SELECTION) -->
+                <div class="input-group role-fields" id="teacherFields">
+                    <label for="subject_taught">Subject Taught</label>
+                    <div class="input-wrapper">
+                        <select id="subject_taught" name="subject_taught">
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Science & Technology">Science</option>
+                            <option value="English Literature">English Literature</option>
+                            <option value="Social Studies">Social Studies</option>
+                            <option value="Gujarati / Hindi">Gujarati / Hindi</option>
+                            <option value="Computer Science / IT">Computer Science / IT</option>
+                            <option value="Sports & Physical Ed">Sports & Physical Ed</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Biology">Biology</option>
+                        </select>
+                        <i class="fa-solid fa-book-open icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC FIELD 3: HOSTEL MANAGEMENT (DEPARTMENT SELECTION) -->
+                <div class="input-group role-fields" id="hostelFields">
+                    <label for="hostel_department">Hostel Department / Wing</label>
+                    <div class="input-wrapper">
+                        <select id="hostel_department" name="hostel_department">
+                            <option value="Boys Hostel Warden">Boys Hostel Warden</option>
+                            <option value="Girls Hostel Warden">Girls Hostel Warden</option>
+                            <option value="Bhojanalay / Mess Department">Bhojanalay / Mess Department</option>
+                            <option value="General Hostel Administration">General Hostel Administration</option>
+                        </select>
+                        <i class="fa-solid fa-hotel icon-left"></i>
+                    </div>
+                </div>
+
+                <!-- Password Row -->
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="password">Create Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" name="password" placeholder="••••••••" required>
+                            <i class="fa-solid fa-lock icon-left"></i>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
+                            <i class="fa-solid fa-circle-check icon-left"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit">
+                    <span>Submit Request</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+                <!-- Back to Login Prompt -->
+                <div class="login-prompt">
+                    Already have an approved account? <a href="index.html">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 EMRS Angan | Muni Seva Ashram. All rights reserved.</p>
+    </footer>
+
+    <!-- DYNAMIC ROLE SWITCHER & SUPABASE BACKEND JS -->
+    <script>
+        // 🔑 REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Dynamic Role Switcher
+        function handleRoleChange() {
+            const roleSelect = document.getElementById('role').value;
+            const studentFields = document.getElementById('studentFields');
+            const teacherFields = document.getElementById('teacherFields');
+            const hostelFields = document.getElementById('hostelFields');
+
+            studentFields.classList.remove('active');
+            teacherFields.classList.remove('active');
+            hostelFields.classList.remove('active');
+
+            if (roleSelect === 'student') {
+                studentFields.classList.add('active');
+            } else if (roleSelect === 'teacher') {
+                teacherFields.classList.add('active');
+            } else if (roleSelect === 'hostel_mgmt') {
+                hostelFields.classList.add('active');
+            }
+        }
+
+        // Form Submission Handler with Supabase Auth & Profiles Table
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
+            const password = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirm_password').value;
+
+            if (password !== confirmPass) {
+                alert("Passwords do not match. Please re-enter.");
+                return;
+            }
+
+            // 1. Sign up user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (authError) {
+                alert("Registration Error: " + authError.message);
+                return;
+            }
+
+            const userId = authData.user?.id;
+            if (!userId) {
+                alert("An error occurred during registration. Please try again.");
+                return;
+            }
+
+            // 2. Gather role-specific field values
+            let profileData = {
+                id: userId,
+                fullname: fullname,
+                email: email,
+                role: role,
+                is_approved: false // Pending approval by default
+            };
+
+            if (role === 'student') {
+                profileData.class_grade = document.getElementById('class_grade').value;
+            } else if (role === 'teacher') {
+                profileData.subject_taught = document.getElementById('subject_taught').value;
+            } else if (role === 'hostel_mgmt') {
+                profileData.hostel_department = document.getElementById('hostel_department').value;
+            }
+
+            // 3. Insert additional details into our 'profiles' table
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([profileData]);
+
+            if (profileError) {
+                alert("Error saving profile details: " + profileError.message);
+                return;
+            }
+
+            alert("Your access request has been submitted to the Admin approval queue successfully!");
+            document.getElementById('registerForm').reset();
+            handleRoleChange();
+        });
+    </script>
+</body>
+</html>
