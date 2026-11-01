@@ -658,7 +658,7 @@
     </div>
 
     <!-- SUPABASE CLIENT INITIALIZATION & REALTIME DATA LOGIC -->
-     <script>
+    <script>
         // =========================================================================
         // 1. SUPABASE CONNECTION CONFIGURATION
         // =========================================================================
@@ -677,7 +677,10 @@
             } else {
                 currentUser = session.user;
             }
-            document.getElementById('userNameDisplay').textContent = currentUser.user_metadata?.full_name || currentUser.email;
+            
+            // Displays full name if available, otherwise just the username part before '@'
+            const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            document.getElementById('userNameDisplay').textContent = displayName;
             
             // Load real data from Supabase tables
             fetchRealPosts();
@@ -690,7 +693,6 @@
         async function fetchRealPosts() {
             const feedContainer = document.getElementById('postsFeedContainer');
             
-            // Query Supabase 'posts' table along with their comments and likes
             const { data: posts, error } = await _supabase
                 .from('posts')
                 .select('*, post_comments(*), post_likes(*)')
@@ -797,10 +799,13 @@
                 }
             }
 
+            // Uses full name or clean username (stripping gmail domain)
+            const authorName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+
             const { error: insertError } = await _supabase
                 .from('posts')
                 .insert([{
-                    author_name: currentUser.user_metadata?.full_name || currentUser.email,
+                    author_name: authorName,
                     content: contentText,
                     media_url: mediaUrl,
                     likes_count: 0
@@ -827,7 +832,6 @@
 
             const userIdentifier = currentUser.email;
 
-            // Check if user already liked this post
             const { data: existingLikes, error: checkError } = await _supabase
                 .from('post_likes')
                 .select('id')
@@ -840,14 +844,12 @@
             }
 
             if (existingLikes && existingLikes.length > 0) {
-                // Unlike: Delete record
                 await _supabase
                     .from('post_likes')
                     .delete()
                     .eq('post_id', postId)
                     .eq('user_identifier', userIdentifier);
             } else {
-                // Like: Insert record
                 await _supabase
                     .from('post_likes')
                     .insert([{ post_id: postId, user_identifier: userIdentifier }]);
@@ -856,7 +858,6 @@
             fetchRealPosts();
         }
 
-        // Helper to toggle comment section visibility
         function toggleCommentBox(postId) {
             const box = document.getElementById(`commentBox-${postId}`);
             if (box) {
@@ -864,13 +865,12 @@
             }
         }
 
-        // Helper to add a comment
         async function handleAddComment(postId) {
             const input = document.getElementById(`commentInput-${postId}`);
             const commentText = input.value.trim();
             if (!commentText) return;
 
-            const authorName = currentUser.user_metadata?.full_name || currentUser.email;
+            const authorName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
             const { error } = await _supabase
                 .from('post_comments')
@@ -889,7 +889,6 @@
             }
         }
 
-        // Helper to share post
         function handleSharePost(postId) {
             const shareUrl = `${window.location.origin}${window.location.pathname}#post-${postId}`;
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -933,8 +932,10 @@
             const text = input.value.trim();
             if (!text) return;
 
+            const senderName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+
             await _supabase.from('chats').insert([{
-                sender_name: currentUser.user_metadata?.full_name || currentUser.email,
+                sender_name: senderName,
                 message_text: text
             }]);
 
@@ -944,7 +945,8 @@
         function appendChatMessage(msg) {
             const chatBody = document.getElementById('chatBodyContainer');
             const msgDiv = document.createElement('div');
-            const isMe = msg.sender_name === (currentUser.user_metadata?.full_name || currentUser.email);
+            const senderDisplayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            const isMe = msg.sender_name === senderDisplayName;
             
             msgDiv.className = `chat-msg ${isMe ? 'outgoing' : 'incoming'}`;
             msgDiv.innerHTML = `<b>${escapeHTML(msg.sender_name)}:</b> ${escapeHTML(msg.message_text)}`;
