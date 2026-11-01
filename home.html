@@ -546,9 +546,10 @@
 
         <div class="nav-actions">
             <button class="nav-icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-            <div class="user-profile-pill">
-                <span id="userNameDisplay" style="font-size: 0.88rem; font-weight: 600;">Loading User...</span>
-            </div>
+           <div class="user-profile-pill" style="display: flex; align-items: center; gap: 8px;">
+    <div id="userAvatarBadge" style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #6366f1); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">U</div>
+    <span id="userNameDisplay" style="font-size: 0.88rem; font-weight: 600;">Loading User...</span>
+</div>
             <a href="index.html" class="nav-icon-btn" title="Logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="color: #f87171;"></i></a>
             
             <a href="home.html" class="logo-badge" style="background: rgba(255,255,255,0.95);">
