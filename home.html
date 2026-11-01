@@ -670,8 +670,21 @@
 
         let currentUser = null;
 
+        // Helper to extract clean first name (e.g., "kunjan.patel@gmail.com" -> "Kunjan")
+        function getUserFirstName() {
+            if (!currentUser) return 'User';
+            if (currentUser.user_metadata?.full_name) {
+                return currentUser.user_metadata.full_name.split(' ')[0];
+            }
+            if (currentUser.email) {
+                const prefix = currentUser.email.split('@')[0];
+                return prefix.split('.')[0].split('_')[0];
+            }
+            return 'User';
+        }
+
         // Check authentication session on page load
-       async function checkAuthSession() {
+async function checkAuthSession() {
             const { data: { session }, error } = await _supabase.auth.getSession();
             if (!session) {
                 currentUser = { email: 'student@emrsangan.edu.in', user_metadata: { full_name: 'Kunjan (Student)' } };
@@ -679,17 +692,14 @@
                 currentUser = session.user;
             }
             
-            const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-            document.getElementById('userNameDisplay').textContent = displayName;
+            const firstName = getUserFirstName();
+            document.getElementById('userNameDisplay').textContent = firstName;
             
-            // ---> ADD THIS PART: Set first letter into the avatar badge logo <---
-            const firstLetter = displayName.charAt(0).toUpperCase();
             const avatarBadge = document.getElementById('userAvatarBadge');
             if (avatarBadge) {
-                avatarBadge.textContent = firstLetter;
+                avatarBadge.textContent = firstName.charAt(0).toUpperCase();
             }
-            // -----------------------------------------------------------------
-
+            
             fetchRealPosts();
             initSupabaseChat();
         }
@@ -807,12 +817,10 @@
             }
 
             // Uses full name or clean username (stripping gmail domain)
-            const authorName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-
-            const { error: insertError } = await _supabase
+   const { error: insertError } = await _supabase
                 .from('posts')
                 .insert([{
-                    author_name: authorName,
+                    author_name: getUserFirstName(),
                     content: contentText,
                     media_url: mediaUrl,
                     likes_count: 0
@@ -879,11 +887,11 @@
 
             const authorName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
-            const { error } = await _supabase
+      const { error } = await _supabase
                 .from('post_comments')
                 .insert([{
                     post_id: postId,
-                    author_name: authorName,
+                    author_name: getUserFirstName(),
                     comment_text: commentText
                 }]);
 
@@ -934,26 +942,27 @@
             }
         }
 
-        async function sendLiveChatMessage() {
+  
+
+async function sendLiveChatMessage() {
             const input = document.getElementById('chatInputMessage');
             const text = input.value.trim();
             if (!text) return;
 
-            const senderName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-
             await _supabase.from('chats').insert([{
-                sender_name: senderName,
+                sender_name: getUserFirstName(),
                 message_text: text
             }]);
 
             input.value = '';
         }
+            input.value = '';
+        }
 
-        function appendChatMessage(msg) {
+      function appendChatMessage(msg) {
             const chatBody = document.getElementById('chatBodyContainer');
             const msgDiv = document.createElement('div');
-            const senderDisplayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-            const isMe = msg.sender_name === senderDisplayName;
+            const isMe = msg.sender_name === getUserFirstName();
             
             msgDiv.className = `chat-msg ${isMe ? 'outgoing' : 'incoming'}`;
             msgDiv.innerHTML = `<b>${escapeHTML(msg.sender_name)}:</b> ${escapeHTML(msg.message_text)}`;
