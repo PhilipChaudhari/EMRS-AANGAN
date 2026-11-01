@@ -13,7 +13,7 @@
 
     <style>
         /* =========================================================
-           1. RESET & VARIABLES
+           1. RESET & SYSTEM VARIABLES
            ========================================================= */
         * {
             margin: 0;
@@ -24,13 +24,17 @@
 
         :root {
             --bg-main: #0b132b;
-            --bg-card: rgba(15, 23, 42, 0.8);
-            --border-color: rgba(255, 255, 255, 0.12);
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --bg-card-hover: rgba(30, 41, 59, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-focus: rgba(56, 189, 248, 0.4);
             --accent-blue: #38bdf8;
             --accent-indigo: #6366f1;
             --accent-green: #34d399;
-            --text-main: #ffffff;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.4);
         }
 
         body {
@@ -42,7 +46,7 @@
             overflow-x: hidden;
         }
 
-        /* Background Glow */
+        /* Background Animated Glow Overlay */
         .bg-overlay {
             position: fixed;
             top: 0;
@@ -50,23 +54,40 @@
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                linear-gradient(to bottom, rgba(11, 19, 43, 0.9), rgba(11, 19, 43, 0.96)),
+                radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+                linear-gradient(to bottom, rgba(11, 19, 43, 0.92), rgba(11, 19, 43, 0.98)),
                 url('https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=2000&q=85') center/cover no-repeat fixed;
             z-index: -1;
         }
 
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(11, 19, 43, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+
         /* =========================================================
-           2. TOP NAVBAR
+           2. TOP NAVIGATION BAR
            ========================================================= */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 32px;
-            background: rgba(11, 19, 43, 0.88);
-            backdrop-filter: blur(16px);
+            padding: 12px 32px;
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
@@ -77,15 +98,20 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             padding: 6px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
             text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+
+        .logo-badge:hover {
+            transform: translateY(-2px);
         }
 
         .logo-badge img {
-            height: 38px;
+            height: 36px;
             width: auto;
             object-fit: contain;
         }
@@ -99,13 +125,15 @@
             font-weight: 800;
             font-size: 0.9rem;
             color: #0f172a;
+            line-height: 1.1;
         }
 
         .logo-subtitle {
-            font-size: 0.65rem;
-            font-weight: 600;
+            font-size: 0.62rem;
+            font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .nav-actions {
@@ -115,40 +143,73 @@
         }
 
         .nav-icon-btn {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border-color);
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
             cursor: pointer;
-            transition: all 0.2s;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav-icon-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
+            background: rgba(56, 189, 248, 0.18);
             border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            transform: translateY(-2px);
         }
 
         .user-profile-pill {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 14px;
-            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 14px 4px 6px;
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border-color);
-            border-radius: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-profile-pill:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-blue);
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #6366f1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1.5px solid rgba(255,255,255,0.2);
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* =========================================================
-           3. MAIN 3-COLUMN LAYOUT
+           3. MAIN 3-COLUMN DASHBOARD LAYOUT
            ========================================================= */
         .dashboard-container {
             display: grid;
-            grid-template-columns: 260px 1fr 320px;
+            grid-template-columns: 250px 1fr 320px;
             gap: 24px;
             max-width: 1400px;
             margin: 24px auto;
@@ -157,11 +218,14 @@
             flex-grow: 1;
         }
 
-        /* Left Sidebar */
+        /* Left Navigation Sidebar */
         .sidebar-left {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: sticky;
+            top: 80px;
+            height: fit-content;
         }
 
         .menu-item {
@@ -169,14 +233,14 @@
             align-items: center;
             gap: 14px;
             padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid transparent;
             border-radius: 14px;
             color: #cbd5e1;
             font-weight: 600;
             font-size: 0.95rem;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .menu-item:hover, .menu-item.active {
@@ -189,16 +253,17 @@
         .menu-item i {
             font-size: 1.1rem;
             width: 24px;
+            text-align: center;
         }
 
-        /* Center Content (Hero Banner + Feed) */
+        /* Center Stream Feed */
         .feed-container {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
-        /* Institutional Crest Hero Banner */
+        /* Hero Institutional Emblem Banner */
         .hero-crest-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -206,23 +271,42 @@
             border-radius: 24px;
             padding: 24px;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-crest-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
         }
 
         .hero-crest-card img {
             max-width: 100%;
             height: auto;
-            max-height: 220px;
+            max-height: 200px;
             object-fit: contain;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
-            margin-bottom: 12px;
+            filter: drop-shadow(0 6px 15px rgba(0,0,0,0.4));
+            margin-bottom: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .hero-crest-card img:hover {
+            transform: scale(1.02);
         }
 
         .hero-crest-card h2 {
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: #fff;
             margin-bottom: 4px;
+            letter-spacing: -0.3px;
         }
 
         .hero-crest-card p {
@@ -230,39 +314,83 @@
             color: var(--text-muted);
         }
 
-        /* Post Creator Card */
+        /* Create Post Card */
         .create-post-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow-lg);
+            transition: border-color 0.2s;
+        }
+
+        .create-post-card:focus-within {
+            border-color: var(--border-focus);
+        }
+
+        .create-post-header {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
         }
 
         .create-post-input {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            margin-bottom: 16px;
+            flex: 1;
         }
 
         .create-post-input textarea {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(15, 23, 42, 0.7);
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border-color);
             border-radius: 14px;
             color: #fff;
             resize: none;
-            height: 60px;
+            height: 70px;
             outline: none;
-            font-size: 0.92rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
 
         .create-post-input textarea:focus {
             border-color: var(--accent-blue);
-            height: 90px;
+            height: 100px;
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        /* Image Preview Box before post submit */
+        .media-preview-container {
+            display: none;
+            position: relative;
+            margin-bottom: 14px;
+            border-radius: 14px;
+            overflow: hidden;
+            max-height: 250px;
+            border: 1px solid var(--border-color);
+        }
+
+        .media-preview-container img, .media-preview-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-media-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .create-post-actions {
@@ -275,17 +403,17 @@
 
         .upload-options {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .upload-btn {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 14px;
-            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             color: #cbd5e1;
             font-size: 0.85rem;
             font-weight: 600;
@@ -306,23 +434,31 @@
             border: none;
             border-radius: 12px;
             font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
         }
 
         .btn-post-submit:hover {
-            opacity: 0.9;
+            opacity: 0.95;
             transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
         }
 
-        /* Post Cards Style */
+        /* Feed Post Cards */
         .post-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .post-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
         }
 
         .post-header {
@@ -341,6 +477,7 @@
         .post-author {
             font-weight: 700;
             font-size: 0.95rem;
+            color: #f8fafc;
         }
 
         .post-time {
@@ -348,11 +485,69 @@
             color: var(--text-muted);
         }
 
+        .post-options-dropdown {
+            position: relative;
+        }
+
+        .post-menu-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .post-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .post-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 100;
+            min-width: 140px;
+            overflow: hidden;
+        }
+
+        .post-dropdown-content.show {
+            display: block;
+        }
+
+        .post-dropdown-item {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .post-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .post-dropdown-item.delete {
+            color: var(--accent-red);
+        }
+
         .post-content {
-            font-size: 0.92rem;
+            font-size: 0.95rem;
             color: #e2e8f0;
             margin-bottom: 14px;
-            line-height: 1.5;
+            line-height: 1.55;
+            white-space: pre-line;
         }
 
         .post-media {
@@ -360,8 +555,9 @@
             border-radius: 14px;
             overflow: hidden;
             margin-bottom: 14px;
-            max-height: 400px;
+            max-height: 420px;
             background: #000;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .post-media img, .post-media video {
@@ -383,17 +579,110 @@
         .action-btn {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             background: transparent;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
             font-weight: 600;
-            transition: color 0.2s;
+            font-size: 0.88rem;
+            padding: 6px 12px;
+            border-radius: 10px;
+            transition: all 0.2s;
         }
 
         .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
             color: var(--accent-blue);
+        }
+
+        /* Comment Section */
+        .comment-drawer {
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+        }
+
+        .comments-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-item {
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comment-content-wrap {
+            flex: 1;
+        }
+
+        .comment-author {
+            color: var(--accent-blue);
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .delete-comment-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.78rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .delete-comment-btn:hover {
+            color: var(--accent-red);
+        }
+
+        .comment-input-wrap {
+            display: flex;
+            gap: 8px;
+        }
+
+        .comment-input-wrap input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .comment-input-wrap input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .comment-input-wrap button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+
+        .comment-input-wrap button:hover {
+            background: #0369a1;
         }
 
         /* Right Sidebar Widgets */
@@ -401,6 +690,9 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            position: sticky;
+            top: 80px;
+            height: fit-content;
         }
 
         .widget-card {
@@ -409,22 +701,25 @@
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 20px;
+            box-shadow: var(--shadow-lg);
         }
 
         .widget-title {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 0.98rem;
+            font-weight: 800;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: #f8fafc;
+            letter-spacing: -0.2px;
         }
 
         .notice-item {
             padding: 10px 0;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.85rem;
+            line-height: 1.45;
         }
 
         .notice-item:last-child {
@@ -435,11 +730,11 @@
             font-size: 0.72rem;
             color: var(--accent-blue);
             font-weight: 700;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         /* =========================================================
-           4. LIVE CHAT DRAWER
+           4. LIVE REALTIME CHAT DRAWER
            ========================================================= */
         .chat-drawer {
             position: fixed;
@@ -449,21 +744,43 @@
             background: #0f172a;
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-drawer.minimized {
+            transform: translateY(290px);
         }
 
         .chat-header {
             background: linear-gradient(135deg, #0284c7, #2563eb);
-            padding: 12px 16px;
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-weight: 700;
             cursor: pointer;
+            user-select: none;
+        }
+
+        .chat-header span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.92rem;
+        }
+
+        .chat-toggle-icon {
+            font-size: 0.85rem;
+            transition: transform 0.3s;
+        }
+
+        .chat-drawer.minimized .chat-toggle-icon {
+            transform: rotate(180deg);
         }
 
         .chat-body {
@@ -477,21 +794,26 @@
         }
 
         .chat-msg {
-            max-width: 80%;
+            max-width: 82%;
             padding: 8px 12px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 0.85rem;
             line-height: 1.4;
+            word-wrap: break-word;
         }
 
         .chat-msg.incoming {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .chat-msg.outgoing {
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
             align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: #fff;
         }
 
         .chat-input-area {
@@ -502,11 +824,11 @@
         }
 
         .chat-input-area input {
-            width: 100%;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.08);
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             color: #fff;
             outline: none;
             font-size: 0.85rem;
@@ -516,15 +838,21 @@
             background: #0284c7;
             border: none;
             color: #fff;
-            padding: 0 14px;
-            border-radius: 10px;
+            padding: 0 16px;
+            border-radius: 12px;
             margin-left: 8px;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-input-area button:hover {
+            background: #0369a1;
         }
 
         @media (max-width: 1024px) {
             .dashboard-container { grid-template-columns: 1fr; }
             .sidebar-left, .sidebar-right { display: none; }
+            .chat-drawer { right: 10px; bottom: 10px; width: calc(100% - 20px); max-width: 360px; }
         }
     </style>
 </head>
@@ -532,27 +860,33 @@
 
     <div class="bg-overlay"></div>
 
+    <!-- Hidden Input for Custom Profile Avatar Upload -->
+    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+
     <!-- =========================================================
-         HEADER WITH EMBLEM LOGOS
+         HEADER WITH EMBLEM LOGOS & USER PROFILE BADGE
          ========================================================= -->
     <header>
         <a href="home.html" class="logo-badge">
             <img src="emrs_logo.jpg" alt="EMRS Logo">
             <div class="logo-text">
-                <span class="logo-title">EMRS Angan</span>
+                <span class="logo-title">EMRS Aangan</span>
                 <span class="logo-subtitle">Student Portal</span>
             </div>
         </a>
 
         <div class="nav-actions">
             <button class="nav-icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-           <div class="user-profile-pill" style="display: flex; align-items: center; gap: 8px;">
-    <div id="userAvatarBadge" style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #6366f1); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">U</div>
-    <span id="userNameDisplay" style="font-size: 0.88rem; font-weight: 600;">Loading User...</span>
-</div>
-            <a href="index.html" class="nav-icon-btn" title="Logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="color: #f87171;"></i></a>
             
-            <a href="home.html" class="logo-badge" style="background: rgba(255,255,255,0.95);">
+            <!-- Clickable User Profile Pill (Triggers Logo Change) -->
+            <div class="user-profile-pill" onclick="triggerAvatarSelect()" title="Click to change profile logo">
+                <div class="avatar-circle" id="userAvatarBadge">U</div>
+                <span id="userNameDisplay" style="font-size: 0.88rem; font-weight: 700;">Loading User...</span>
+            </div>
+
+            <a href="index.html" class="nav-icon-btn" title="Logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="color: var(--accent-red);"></i></a>
+            
+            <a href="home.html" class="logo-badge">
                 <img src="msa_logo.gif" alt="MSA Logo">
                 <div class="logo-text">
                     <span class="logo-title">MSA</span>
@@ -567,7 +901,7 @@
          ========================================================= -->
     <div class="dashboard-container">
         
-        <!-- 1. LEFT SIDEBAR -->
+        <!-- 1. LEFT SIDEBAR MENU -->
         <div class="sidebar-left">
             <a href="home.html" class="menu-item active"><i class="fa-solid fa-house"></i> Home Feed</a>
             <a href="reels.html" class="menu-item"><i class="fa-solid fa-video"></i> Short Videos Reel</a>
@@ -577,26 +911,36 @@
             <a href="profile.html" class="menu-item"><i class="fa-solid fa-user"></i> My Profile</a>
         </div>
 
-        <!-- 2. CENTER FEED & EMBLEM BANNER -->
+        <!-- 2. CENTER STREAM FEED & HERO BANNER -->
         <div class="feed-container">
             
             <!-- Institutional Emblem Crest Hero Banner -->
             <div class="hero-crest-card">
                 <img src="EMRS–MSA Institutional Emblem Crest.png" alt="EMRS-MSA Institutional Emblem Crest">
-                <h2>EMRS Angan &bull; Muni Seva Ashram</h2>
-                <p>&ldquo;Knowledge that Liberates&rdquo; &mdash; Official Campus Collaborative Network[cite: 4]</p>
+                <h2>EMRS Aangan &bull; Muni Seva Ashram</h2>
+                <p>&ldquo;Knowledge that Liberates&rdquo; &mdash; Official Campus Collaborative Network</p>
             </div>
 
-            <!-- Post Creator Card -->
+            <!-- Post Creator Card with Interactive Media Preview -->
             <div class="create-post-card">
-                <div class="create-post-input">
-                    <textarea id="postContentInput" placeholder="Share an update, research insight, or media with EMRS Angan..."></textarea>
+                <div class="create-post-header">
+                    <div class="avatar-circle" id="creatorAvatarBadge">U</div>
+                    <div class="create-post-input">
+                        <textarea id="postContentInput" placeholder="Share an update, research insight, or media with EMRS Aangan..."></textarea>
+                    </div>
                 </div>
+
+                <!-- Media Preview Drawer -->
+                <div class="media-preview-container" id="mediaPreviewBox">
+                    <button class="remove-media-btn" onclick="clearSelectedMedia()"><i class="fa-solid fa-xmark"></i></button>
+                    <div id="previewElementHolder"></div>
+                </div>
+
                 <div class="create-post-actions">
                     <div class="upload-options">
                         <label class="upload-btn">
-                            <i class="fa-solid fa-image" style="color: #38bdf8;"></i> Photo/Video
-                            <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;">
+                            <i class="fa-solid fa-image" style="color: var(--accent-blue);"></i> Photo/Video
+                            <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;" onchange="previewSelectedMedia(event)">
                         </label>
                     </div>
                     <button class="btn-post-submit" onclick="createNewPost()">Publish Post</button>
@@ -605,37 +949,29 @@
 
             <!-- DYNAMIC POSTS STREAM LOADED FROM SUPABASE -->
             <div id="postsFeedContainer" style="display: flex; flex-direction: column; gap: 20px;">
-                <!-- Real user posts load here dynamically -->
-                <div class="post-card" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
+                <div class="post-card" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: var(--accent-blue);"></i>
                     <p>Loading real posts from Supabase database...</p>
                 </div>
             </div>
 
         </div>
 
-        <!-- 3. RIGHT SIDEBAR WIDGETS -->
+        <!-- 3. RIGHT SIDEBAR DYNAMIC WIDGETS (USER UPLOADED ONLY) -->
         <div class="sidebar-right">
-            <!-- School Notices -->
+            <!-- Dynamic Campus Notices loaded from Supabase notices table -->
             <div class="widget-card">
-                <div class="widget-title"><i class="fa-solid fa-bullhorn" style="color: #38bdf8;"></i> Campus Notices</div>
-                <div class="notice-item">
-                    <div class="notice-date">October 30, 2026</div>
-                    Hostel mess schedule updated for upcoming festival week.
-                </div>
-                <div class="notice-item">
-                    <div class="notice-date">October 28, 2026</div>
-                    Science & Robotics club exhibition registration is now live.
+                <div class="widget-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent-blue);"></i> Campus Notices</div>
+                <div id="noticesContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <p style="font-size: 0.82rem; color: var(--text-muted);">Loading notices...</p>
                 </div>
             </div>
 
-            <!-- Hostel Mess Menu -->
+            <!-- Dynamic Bhojanalay Mess Menu loaded from Supabase mess_menu table -->
             <div class="widget-card">
-                <div class="widget-title"><i class="fa-solid fa-utensils" style="color: #6366f1;"></i> Bhojanalay Mess Menu</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-                    <p>🍳 <b>Breakfast:</b> Poha & Masala Chai</p>
-                    <p>🍲 <b>Lunch:</b> Gujarati Thali & Butter Milk</p>
-                    <p>🌙 <b>Dinner:</b> Dal Tadka, Roti & Sweet</p>
+                <div class="widget-title"><i class="fa-solid fa-utensils" style="color: var(--accent-indigo);"></i> Bhojanalay Mess Menu</div>
+                <div id="messMenuContainer" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7;">
+                    <p style="font-size: 0.82rem; color: var(--text-muted);">Loading menu...</p>
                 </div>
             </div>
         </div>
@@ -646,8 +982,9 @@
          LIVE CHAT DRAWER (SUPABASE REALTIME)
          ========================================================= -->
     <div class="chat-drawer" id="chatDrawer">
-        <div class="chat-header">
+        <div class="chat-header" onclick="toggleChatDrawer()">
             <span><i class="fa-solid fa-comments"></i> EMRS Realtime Chat</span>
+            <i class="fa-solid fa-chevron-down chat-toggle-icon"></i>
         </div>
         <div class="chat-body" id="chatBodyContainer">
             <div class="chat-msg incoming">Connected to Supabase live chat channel.</div>
@@ -658,7 +995,9 @@
         </div>
     </div>
 
-    <!-- SUPABASE CLIENT INITIALIZATION & REALTIME DATA LOGIC -->
+    <!-- =========================================================
+         SUPABASE CLIENT INITIALIZATION & DYNAMIC DATA LOGIC
+         ========================================================= -->
     <script>
         // =========================================================================
         // 1. SUPABASE CONNECTION CONFIGURATION
@@ -669,22 +1008,27 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null;
+        let customAvatarUrl = localStorage.getItem('emrs_user_avatar') || null;
 
-        // Helper to extract clean first name (e.g., "kunjan.patel@gmail.com" -> "Kunjan")
+        // Helper to extract clean first name (e.g. "kunjan123@gmail.com" -> "Kunjan")
         function getUserFirstName() {
             if (!currentUser) return 'User';
+            let rawName = '';
+
             if (currentUser.user_metadata?.full_name) {
-                return currentUser.user_metadata.full_name.split(' ')[0];
+                rawName = currentUser.user_metadata.full_name;
+            } else if (currentUser.email) {
+                rawName = currentUser.email.split('@')[0];
+            } else {
+                return 'User';
             }
-            if (currentUser.email) {
-                const prefix = currentUser.email.split('@')[0];
-                return prefix.split('.')[0].split('_')[0];
-            }
-            return 'User';
+
+            let clean = rawName.split('.')[0].split('_')[0].split('-')[0];
+            return clean.charAt(0).toUpperCase() + clean.slice(1);
         }
 
         // Check authentication session on page load
-async function checkAuthSession() {
+        async function checkAuthSession() {
             const { data: { session }, error } = await _supabase.auth.getSession();
             if (!session) {
                 currentUser = { email: 'student@emrsangan.edu.in', user_metadata: { full_name: 'Kunjan (Student)' } };
@@ -695,17 +1039,92 @@ async function checkAuthSession() {
             const firstName = getUserFirstName();
             document.getElementById('userNameDisplay').textContent = firstName;
             
-            const avatarBadge = document.getElementById('userAvatarBadge');
-            if (avatarBadge) {
-                avatarBadge.textContent = firstName.charAt(0).toUpperCase();
-            }
+            renderAvatarBadges(firstName);
             
             fetchRealPosts();
             initSupabaseChat();
+            fetchDynamicWidgets();
+        }
+
+        // Render Avatar Badges with Letter or Custom Logo Image
+        function renderAvatarBadges(firstName) {
+            const avatarBadges = [document.getElementById('userAvatarBadge'), document.getElementById('creatorAvatarBadge')];
+            const firstLetter = firstName.charAt(0).toUpperCase();
+
+            avatarBadges.forEach(badge => {
+                if (!badge) return;
+                if (customAvatarUrl) {
+                    badge.innerHTML = `<img src="${customAvatarUrl}" alt="Avatar">`;
+                } else {
+                    badge.textContent = firstLetter;
+                }
+            });
+        }
+
+        // Trigger Avatar Change
+        function triggerAvatarSelect() {
+            document.getElementById('avatarFileInput').click();
+        }
+
+        // Upload and Save Profile Logo / Avatar locally & preview
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customAvatarUrl = e.target.result;
+                    localStorage.setItem('emrs_user_avatar', customAvatarUrl);
+                    renderAvatarBadges(getUserFirstName());
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // =========================================================
+        // FETCH USER-UPLOADED NOTICES & MESS MENU FROM SUPABASE
+        // =========================================================
+        async function fetchDynamicWidgets() {
+            // 1. Fetch Notices
+            const { data: notices, error: noticeErr } = await _supabase
+                .from('notices')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(3);
+
+            const noticesContainer = document.getElementById('noticesContainer');
+            if (noticeErr || !notices || notices.length === 0) {
+                noticesContainer.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted);">No campus notices uploaded yet.</p>`;
+            } else {
+                noticesContainer.innerHTML = notices.map(n => `
+                    <div class="notice-item">
+                        <div class="notice-date">${new Date(n.created_at).toLocaleDateString()}</div>
+                        ${escapeHTML(n.notice_text)}
+                    </div>
+                `).join('');
+            }
+
+            // 2. Fetch Mess Menu (Looking for department-uploaded entries)
+            const { data: menuData, error: menuErr } = await _supabase
+                .from('mess_menu')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            const messContainer = document.getElementById('messMenuContainer');
+            if (menuErr || !menuData || menuData.length === 0) {
+                messContainer.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted);">Mess menu not yet updated by department.</p>`;
+            } else {
+                const m = menuData[0];
+                messContainer.innerHTML = `
+                    <p>🍳 <b>Breakfast:</b> ${escapeHTML(m.breakfast || 'Not specified')}</p>
+                    <p>🍲 <b>Lunch:</b> ${escapeHTML(m.lunch || 'Not specified')}</p>
+                    <p>🌙 <b>Dinner:</b> ${escapeHTML(m.dinner || 'Not specified')}</p>
+                `;
+            }
         }
 
         // =========================================================================
-        // 2. FETCH REAL POSTS FROM SUPABASE (WITH LIKES & COMMENTS)
+        // 2. FETCH REAL POSTS FROM SUPABASE (WITH LIKES, COMMENTS & DELETE)
         // =========================================================================
         async function fetchRealPosts() {
             const feedContainer = document.getElementById('postsFeedContainer');
@@ -717,16 +1136,17 @@ async function checkAuthSession() {
 
             if (error) {
                 console.error('Error fetching posts:', error);
-                feedContainer.innerHTML = `<p style="color: red; text-align: center;">Failed to load posts: ${error.message}</p>`;
+                feedContainer.innerHTML = `<p style="color: var(--accent-red); text-align: center;">Failed to load posts: ${error.message}</p>`;
                 return;
             }
 
             if (!posts || posts.length === 0) {
-                feedContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No posts yet. Be the first to share an update!</p>`;
+                feedContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 30px;">No posts yet. Be the first to share an update with EMRS Aangan!</p>`;
                 return;
             }
 
             const currentUserEmail = currentUser?.email || 'student@emrsangan.edu.in';
+            const currentFirstName = getUserFirstName();
 
             feedContainer.innerHTML = '';
             posts.forEach(post => {
@@ -735,53 +1155,136 @@ async function checkAuthSession() {
                 
                 const userHasLiked = likesList.some(l => l.user_identifier === currentUserEmail);
                 const actualLikeCount = likesList.length;
+                
+                let displayAuthor = post.author_name || 'EMRS User';
+                if (displayAuthor.includes('@')) {
+                    displayAuthor = displayAuthor.split('@')[0];
+                    displayAuthor = displayAuthor.charAt(0).toUpperCase() + displayAuthor.slice(1);
+                }
+
+                const isMyPost = displayAuthor.toLowerCase() === currentFirstName.toLowerCase();
 
                 const postEl = document.createElement('div');
                 postEl.className = 'post-card';
+                postEl.id = `post-card-${post.id}`;
                 postEl.innerHTML = `
                     <div class="post-header">
                         <div class="post-user-info">
+                            <div class="avatar-circle">${displayAuthor.charAt(0).toUpperCase()}</div>
                             <div>
-                                <div class="post-author">${escapeHTML(post.author_name || 'EMRS User')}</div>
+                                <div class="post-author">${escapeHTML(displayAuthor)}</div>
                                 <div class="post-time">${new Date(post.created_at).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div class="post-options-dropdown">
+                            <button class="post-menu-btn" onclick="togglePostDropdown(${post.id})"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            <div class="post-dropdown-content" id="dropdown-${post.id}">
+                                ${isMyPost ? `
+                                    <div class="post-dropdown-item delete" onclick="handleDeletePost(${post.id})">
+                                        <i class="fa-solid fa-trash-can"></i> Delete Post
+                                    </div>
+                                ` : ''}
+                                <div class="post-dropdown-item" onclick="handleSharePost(${post.id})">
+                                    <i class="fa-solid fa-link"></i> Copy Link
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="post-content">${escapeHTML(post.content || '')}</div>
-                    ${post.media_url ? `<div class="post-media"><img src="${post.media_url}" alt="Post media"></div>` : ''}
+                    ${post.media_url ? `
+                        <div class="post-media">
+                            ${post.media_url.match(/\.(mp4|webm|ogg)$/i) ? 
+                                `<video src="${post.media_url}" controls></video>` : 
+                                `<img src="${post.media_url}" alt="Post media">`
+                            }
+                        </div>
+                    ` : ''}
                     
-                    <!-- CONNECTED INTERACTIVE BUTTONS WITH DYNAMIC LIKE COLOR & COUNT -->
+                    <!-- INTERACTIVE ACTIONS -->
                     <div class="post-footer-actions">
                         <button class="action-btn" onclick="handleLikePost(${post.id})">
                             <i class="fa-${userHasLiked ? 'solid' : 'regular'} fa-heart" style="color: ${userHasLiked ? '#ef4444' : 'inherit'};"></i> 
                             <span>${actualLikeCount}</span> Likes
                         </button>
                         <button class="action-btn" onclick="toggleCommentBox(${post.id})">
-                            <i class="fa-solid fa-comment"></i> ${commentsList.length} Comments
+                            <i class="fa-solid fa-comment"></i> <span>${commentsList.length}</span> Comments
                         </button>
                         <button class="action-btn" onclick="handleSharePost(${post.id})">
-                            <i class="fa-solid fa-share"></i> Share
+                            <i class="fa-solid fa-share-nodes"></i> Share
                         </button>
                     </div>
 
-                    <!-- COLLAPSIBLE COMMENT BOX -->
-                    <div id="commentBox-${post.id}" style="display: none; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-                        <div style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;">
-                            ${commentsList.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-muted);">No comments yet. Be the first to reply!</p>' : ''}
-                            ${commentsList.map(c => `
-                                <div style="font-size: 0.85rem; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 10px;">
-                                    <b style="color: var(--accent-blue);">${escapeHTML(c.author_name)}:</b> ${escapeHTML(c.comment_text)}
-                                </div>
-                            `).join('')}
+                    <!-- COLLAPSIBLE COMMENT DRAWER -->
+                    <div class="comment-drawer" id="commentBox-${post.id}" style="display: none;">
+                        <div class="comments-list" id="commentsContainer-${post.id}">
+                            ${commentsList.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-muted); padding: 4px 0;">No comments yet. Be the first to reply!</p>' : ''}
+                            ${commentsList.map(c => {
+                                let cAuthor = c.author_name || 'User';
+                                if (cAuthor.includes('@')) cAuthor = cAuthor.split('@')[0];
+                                cAuthor = cAuthor.charAt(0).toUpperCase() + cAuthor.slice(1);
+
+                                const isMyComment = cAuthor.toLowerCase() === currentFirstName.toLowerCase() || isMyPost;
+
+                                return `
+                                    <div class="comment-item" id="comment-${c.id}">
+                                        <div class="comment-content-wrap">
+                                            <div class="comment-author">${escapeHTML(cAuthor)}</div>
+                                            <div>${escapeHTML(c.comment_text)}</div>
+                                        </div>
+                                        ${isMyComment ? `
+                                            <button class="delete-comment-btn" onclick="handleDeleteComment(${c.id}, ${post.id})" title="Delete Comment">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="commentInput-${post.id}" placeholder="Write a comment..." style="flex: 1; padding: 8px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; font-size: 0.85rem; outline: none;">
-                            <button onclick="handleAddComment(${post.id})" style="background: #0284c7; color: white; border: none; padding: 0 14px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Post</button>
+                        <div class="comment-input-wrap">
+                            <input type="text" id="commentInput-${post.id}" placeholder="Write a comment..." onkeypress="handleCommentKey(event, ${post.id})">
+                            <button onclick="handleAddComment(${post.id})">Reply</button>
                         </div>
                     </div>
                 `;
                 feedContainer.appendChild(postEl);
             });
+        }
+
+        // Toggle Post Option Dropdown Menu
+        function togglePostDropdown(postId) {
+            const dropdown = document.getElementById(`dropdown-${postId}`);
+            document.querySelectorAll('.post-dropdown-content').forEach(d => {
+                if (d !== dropdown) d.classList.remove('show');
+            });
+            if (dropdown) dropdown.classList.toggle('show');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.post-menu-btn') && !event.target.matches('.fa-ellipsis-vertical')) {
+                document.querySelectorAll('.post-dropdown-content').forEach(d => d.classList.remove('show'));
+            }
+        };
+
+        function previewSelectedMedia(event) {
+            const file = event.target.files[0];
+            const container = document.getElementById('mediaPreviewBox');
+            const holder = document.getElementById('previewElementHolder');
+            
+            if (file) {
+                const url = URL.createObjectURL(file);
+                if (file.type.startsWith('video/')) {
+                    holder.innerHTML = `<video src="${url}" controls style="max-height: 200px; width:100%;"></video>`;
+                } else {
+                    holder.innerHTML = `<img src="${url}" style="max-height: 200px; width:100%; object-fit: cover;">`;
+                }
+                container.style.display = 'block';
+            }
+        }
+
+        function clearSelectedMedia() {
+            document.getElementById('mediaFileInput').value = '';
+            document.getElementById('mediaPreviewBox').style.display = 'none';
+            document.getElementById('previewElementHolder').innerHTML = '';
         }
 
         // =========================================================================
@@ -816,8 +1319,7 @@ async function checkAuthSession() {
                 }
             }
 
-            // Uses full name or clean username (stripping gmail domain)
-   const { error: insertError } = await _supabase
+            const { error: insertError } = await _supabase
                 .from('posts')
                 .insert([{
                     author_name: getUserFirstName(),
@@ -831,13 +1333,46 @@ async function checkAuthSession() {
                 alert('Failed to publish post. Ensure Supabase "posts" table is created.');
             } else {
                 document.getElementById('postContentInput').value = '';
-                document.getElementById('mediaFileInput').value = '';
+                clearSelectedMedia();
                 fetchRealPosts();
             }
         }
 
         // =========================================================================
-        // 4. SMART TOGGLE LIKE HANDLER (One like per user)
+        // 4. DELETE POST & DELETE COMMENT HANDLERS
+        // =========================================================================
+        async function handleDeletePost(postId) {
+            if (!confirm('Are you sure you want to delete this post permanently?')) return;
+
+            const { error } = await _supabase
+                .from('posts')
+                .delete()
+                .eq('id', postId);
+
+            if (error) {
+                console.error('Error deleting post:', error);
+                alert('Failed to delete post: ' + error.message);
+            } else {
+                fetchRealPosts();
+            }
+        }
+
+        async function handleDeleteComment(commentId, postId) {
+            const { error } = await _supabase
+                .from('post_comments')
+                .delete()
+                .eq('id', commentId);
+
+            if (error) {
+                console.error('Error deleting comment:', error);
+                alert('Failed to delete comment.');
+            } else {
+                fetchRealPosts();
+            }
+        }
+
+        // =========================================================================
+        // 5. SMART TOGGLE LIKE HANDLER
         // =========================================================================
         async function handleLikePost(postId) {
             if (!currentUser) {
@@ -880,14 +1415,16 @@ async function checkAuthSession() {
             }
         }
 
+        function handleCommentKey(e, postId) {
+            if (e.key === 'Enter') handleAddComment(postId);
+        }
+
         async function handleAddComment(postId) {
             const input = document.getElementById(`commentInput-${postId}`);
             const commentText = input.value.trim();
             if (!commentText) return;
 
-            const authorName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-
-      const { error } = await _supabase
+            const { error } = await _supabase
                 .from('post_comments')
                 .insert([{
                     post_id: postId,
@@ -914,8 +1451,12 @@ async function checkAuthSession() {
         }
 
         // =========================================================================
-        // 5. SUPABASE REALTIME CHAT
+        // 6. SUPABASE REALTIME CHAT DRAWER
         // =========================================================================
+        function toggleChatDrawer() {
+            document.getElementById('chatDrawer').classList.toggle('minimized');
+        }
+
         function initSupabaseChat() {
             const chatChannel = _supabase.channel('public:chats');
             
@@ -933,7 +1474,7 @@ async function checkAuthSession() {
                 .from('chats')
                 .select('*')
                 .order('created_at', { ascending: true })
-                .limit(20);
+                .limit(30);
 
             if (chats) {
                 const chatBody = document.getElementById('chatBodyContainer');
@@ -942,9 +1483,7 @@ async function checkAuthSession() {
             }
         }
 
-  
-
-async function sendLiveChatMessage() {
+        async function sendLiveChatMessage() {
             const input = document.getElementById('chatInputMessage');
             const text = input.value.trim();
             if (!text) return;
@@ -956,16 +1495,19 @@ async function sendLiveChatMessage() {
 
             input.value = '';
         }
-            input.value = '';
-        }
 
-      function appendChatMessage(msg) {
+        function appendChatMessage(msg) {
             const chatBody = document.getElementById('chatBodyContainer');
             const msgDiv = document.createElement('div');
-            const isMe = msg.sender_name === getUserFirstName();
+            
+            let sender = msg.sender_name || 'User';
+            if (sender.includes('@')) sender = sender.split('@')[0];
+            sender = sender.charAt(0).toUpperCase() + sender.slice(1);
+
+            const isMe = sender.toLowerCase() === getUserFirstName().toLowerCase();
             
             msgDiv.className = `chat-msg ${isMe ? 'outgoing' : 'incoming'}`;
-            msgDiv.innerHTML = `<b>${escapeHTML(msg.sender_name)}:</b> ${escapeHTML(msg.message_text)}`;
+            msgDiv.innerHTML = `<b>${escapeHTML(sender)}:</b> ${escapeHTML(msg.message_text)}`;
             chatBody.appendChild(msgDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
@@ -985,7 +1527,7 @@ async function sendLiveChatMessage() {
             );
         }
 
-        // Run session check on load
+        // Run session check on window load
         window.onload = checkAuthSession;
     </script>
 </body>
