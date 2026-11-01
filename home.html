@@ -685,62 +685,7 @@
         }
 
         
-         // =========================================================================
-        // SMART TOGGLE LIKE HANDLER (One like per user)
-        // =========================================================================
-        async function handleLikePost(postId, currentLikes) {
-            if (!currentUser) {
-                alert('Please sign in to like posts.');
-                return;
-            }
-
-            const userIdentifier = currentUser.email;
-
-            // 1. Check if this user already liked this post
-            const { data: existingLike, error: checkError } = await _supabase
-                .from('post_likes')
-                .select('*')
-                .eq('post_id', postId)
-                .eq('user_identifier', userIdentifier)
-                .maybeSingle();
-
-            if (checkError) {
-                console.error('Error checking like status:', checkError);
-                return;
-            }
-
-            let newCount = currentLikes;
-
-            if (existingLike) {
-                // ALREADY LIKED: Unlike it (Remove row, decrease count)
-                await _supabase
-                    .from('post_likes')
-                    .delete()
-                    .eq('post_id', postId)
-                    .eq('user_identifier', userIdentifier);
-
-                newCount = Math.max(0, currentLikes - 1);
-            } else {
-                // NOT LIKED YET: Like it (Insert row, increase count)
-                await _supabase
-                    .from('post_likes')
-                    .insert([{ post_id: postId, user_identifier: userIdentifier }]);
-
-                newCount = currentLikes + 1;
-            }
-
-            // 2. Update the main posts table with the new count
-            const { error: updateError } = await _supabase
-                .from('posts')
-                .update({ likes_count: newCount })
-                .eq('id', postId);
-
-            if (updateError) {
-                console.error('Error updating post like count:', updateError);
-            } else {
-                fetchRealPosts(); // Refresh feed to display updated count
-            }
-        }
+        
          // =========================================================================
         // 2. FETCH REAL POSTS FROM SUPABASE
         // =========================================================================
@@ -867,59 +812,61 @@
             }
         }
 
-        // =========================================================================
-        // 4. INTERACTION HANDLERS (LIKE, COMMENT, SHARE)
+         // =========================================================================
+        // SMART TOGGLE LIKE HANDLER (One like per user)
         // =========================================================================
         async function handleLikePost(postId, currentLikes) {
-            const newCount = currentLikes + 1;
-            const { error } = await _supabase
+            if (!currentUser) {
+                alert('Please sign in to like posts.');
+                return;
+            }
+
+            const userIdentifier = currentUser.email;
+
+            // 1. Check if this user already liked this post
+            const { data: existingLike, error: checkError } = await _supabase
+                .from('post_likes')
+                .select('*')
+                .eq('post_id', postId)
+                .eq('user_identifier', userIdentifier)
+                .maybeSingle();
+
+            if (checkError) {
+                console.error('Error checking like status:', checkError);
+                return;
+            }
+
+            let newCount = currentLikes;
+
+            if (existingLike) {
+                // ALREADY LIKED: Unlike it (Remove row, decrease count)
+                await _supabase
+                    .from('post_likes')
+                    .delete()
+                    .eq('post_id', postId)
+                    .eq('user_identifier', userIdentifier);
+
+                newCount = Math.max(0, currentLikes - 1);
+            } else {
+                // NOT LIKED YET: Like it (Insert row, increase count)
+                await _supabase
+                    .from('post_likes')
+                    .insert([{ post_id: postId, user_identifier: userIdentifier }]);
+
+                newCount = currentLikes + 1;
+            }
+
+            // 2. Update the main posts table with the new count
+            const { error: updateError } = await _supabase
                 .from('posts')
                 .update({ likes_count: newCount })
                 .eq('id', postId);
 
-            if (!error) {
-                fetchRealPosts();
-            }
-        }
-
-        function toggleCommentBox(postId) {
-            const box = document.getElementById(`commentBox-${postId}`);
-            if (box) {
-                box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            }
-        }
-
-        async function handleAddComment(postId) {
-            const input = document.getElementById(`commentInput-${postId}`);
-            const commentText = input.value.trim();
-            if (!commentText) return;
-
-            const authorName = currentUser.user_metadata?.full_name || currentUser.email;
-
-            const { error } = await _supabase
-                .from('post_comments')
-                .insert([{
-                    post_id: postId,
-                    author_name: authorName,
-                    comment_text: commentText
-                }]);
-
-            if (error) {
-                console.error('Error adding comment:', error);
-                alert('Failed to post comment.');
+            if (updateError) {
+                console.error('Error updating post like count:', updateError);
             } else {
-                input.value = '';
-                fetchRealPosts();
+                fetchRealPosts(); // Refresh feed to display updated count
             }
-        }
-
-        function handleSharePost(postId) {
-            const shareUrl = `${window.location.origin}${window.location.pathname}#post-${postId}`;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('Post link copied to clipboard!');
-            }).catch(() => {
-                alert('Share link: ' + shareUrl);
-            });
         }
 
         // =========================================================================
