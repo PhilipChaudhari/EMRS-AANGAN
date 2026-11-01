@@ -687,9 +687,26 @@
         // =========================================================================
         // 2. FETCH REAL POSTS FROM SUPABASE
         // =========================================================================
-        // =========================================================================
-        // 2. FETCH REAL POSTS FROM SUPABASE (WITH COMMENTS & LIKES)
-        // =========================================================================
+// =========================================================================
+// LIKE HANDLER FUNCTION
+// =========================================================================
+async function handleLikePost(postId, currentLikes) {
+    const newCount = currentLikes + 1;
+    
+    // Send the updated count to Supabase
+    const { error } = await _supabase
+        .from('posts')
+        .update({ likes_count: newCount })
+        .eq('id', postId);
+
+    if (error) {
+        console.error('Error updating likes:', error);
+        alert('Could not save like: ' + error.message);
+    } else {
+        // Refresh the feed so the new count shows up immediately and sticks
+        fetchRealPosts();
+    }
+}
         async function fetchRealPosts() {
             const feedContainer = document.getElementById('postsFeedContainer');
             
