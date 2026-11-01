@@ -671,7 +671,7 @@
         let currentUser = null;
 
         // Check authentication session on page load
-        async function checkAuthSession() {
+       async function checkAuthSession() {
             const { data: { session }, error } = await _supabase.auth.getSession();
             if (!session) {
                 currentUser = { email: 'student@emrsangan.edu.in', user_metadata: { full_name: 'Kunjan (Student)' } };
@@ -679,11 +679,17 @@
                 currentUser = session.user;
             }
             
-            // Displays full name if available, otherwise just the username part before '@'
             const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
             document.getElementById('userNameDisplay').textContent = displayName;
             
-            // Load real data from Supabase tables
+            // ---> ADD THIS PART: Set first letter into the avatar badge logo <---
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            const avatarBadge = document.getElementById('userAvatarBadge');
+            if (avatarBadge) {
+                avatarBadge.textContent = firstLetter;
+            }
+            // -----------------------------------------------------------------
+
             fetchRealPosts();
             initSupabaseChat();
         }
