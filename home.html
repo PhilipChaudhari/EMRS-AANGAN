@@ -4,646 +4,321 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - EMRS Angan</title>
-    <!-- Font Awesome Icons & Google Fonts -->
+    <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Supabase JavaScript Client Library CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <style>
-        /* =========================================================
-           1. RESET & VARIABLES
-           ========================================================= */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        :root {
+            --primary: #1A365D;
+            --primary-accent: #2B6CB0;
+            --secondary: #DD6B20;
+            --bg-light: #F7FAFC;
+            --card-bg: #FFFFFF;
+            --text-dark: #2D3748;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
         }
 
-        :root {
-            --bg-main: #0b132b;
-            --bg-card: rgba(15, 23, 42, 0.8);
-            --border-color: rgba(255, 255, 255, 0.12);
-            --accent-blue: #38bdf8;
-            --accent-indigo: #6366f1;
-            --accent-green: #34d399;
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            background: var(--bg-main);
-            color: var(--text-main);
-            min-height: 100vh;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* Background Glow */
-        .bg-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                linear-gradient(to bottom, rgba(11, 19, 43, 0.9), rgba(11, 19, 43, 0.96)),
-                url('https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=2000&q=85') center/cover no-repeat fixed;
-            z-index: -1;
-        }
-
-        /* =========================================================
-           2. TOP NAVBAR
-           ========================================================= */
-        header {
+        /* Navbar */
+        .navbar {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 32px;
-            background: rgba(11, 19, 43, 0.88);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 100;
         }
 
-        .logo-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.92);
-            padding: 6px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-decoration: none;
-        }
-
-        .logo-badge img {
-            height: 38px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .logo-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-title {
-            font-weight: 800;
-            font-size: 0.9rem;
-            color: #0f172a;
-        }
-
-        .logo-subtitle {
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .nav-icon-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-color);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .nav-icon-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: var(--accent-blue);
-        }
-
-        .user-profile-pill {
+        .navbar-brand {
+            font-size: 1.4rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
         }
 
-        /* =========================================================
-           3. MAIN 3-COLUMN LAYOUT
-           ========================================================= */
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 260px 1fr 320px;
-            gap: 24px;
-            max-width: 1400px;
-            margin: 24px auto;
-            padding: 0 20px;
-            width: 100%;
-            flex-grow: 1;
-        }
-
-        /* Left Sidebar */
-        .sidebar-left {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .menu-item {
+        .user-profile {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid transparent;
-            border-radius: 14px;
-            color: #cbd5e1;
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-decoration: none;
-            transition: all 0.2s;
+            gap: 15px;
         }
 
-        .menu-item:hover, .menu-item.active {
-            background: rgba(56, 189, 248, 0.12);
-            border-color: rgba(56, 189, 248, 0.3);
-            color: var(--accent-blue);
-            transform: translateX(4px);
+        .btn-logout {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
         }
 
-        .menu-item i {
-            font-size: 1.1rem;
-            width: 24px;
+        .btn-logout:hover {
+            background-color: #C05621;
         }
 
-        /* Center Content (Hero Banner + Feed) */
-        .feed-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        /* Container */
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex: 1;
         }
 
-        /* Institutional Crest Hero Banner */
-        .hero-crest-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
+        /* Post Creation Card */
+        .create-post-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
 
-        .hero-crest-card img {
-            max-width: 100%;
-            height: auto;
-            max-height: 220px;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        .create-post-card textarea {
+            width: 100%;
+            height: 90px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: none;
+            font-size: 0.95rem;
+            outline: none;
             margin-bottom: 12px;
         }
 
-        .hero-crest-card h2 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 4px;
+        .create-post-card textarea:focus {
+            border-color: var(--primary-accent);
         }
 
-        .hero-crest-card p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Post Creator Card */
-        .create-post-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .create-post-input {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .create-post-input textarea {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            color: #fff;
-            resize: none;
-            height: 60px;
-            outline: none;
-            font-size: 0.92rem;
-        }
-
-        .create-post-input textarea:focus {
-            border-color: var(--accent-blue);
-            height: 90px;
-        }
-
-        .create-post-actions {
+        .post-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid var(--border-color);
-            padding-top: 14px;
         }
 
-        .upload-options {
-            display: flex;
-            gap: 12px;
-        }
-
-        .upload-btn {
-            display: flex;
+        .file-upload-btn {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 14px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: #cbd5e1;
-            font-size: 0.85rem;
-            font-weight: 600;
+            color: var(--primary-accent);
             cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        .upload-btn:hover {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-
-        .btn-post-submit {
-            padding: 10px 24px;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: #fff;
+        .btn-post {
+            background-color: var(--primary);
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-weight: 700;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            font-weight: 600;
+
+```html
         }
 
-        .btn-post-submit:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .btn-post:hover {
+            background-color: var(--primary-accent);
         }
 
-        /* Post Cards Style */
+        /* Feed Posts */
         .post-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
         }
 
         .post-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .post-user-info {
-            display: flex;
-            gap: 12px;
-            align-items: center;
+            margin-bottom: 12px;
         }
 
         .post-author {
-            font-weight: 700;
-            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
         }
 
         .post-time {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
         }
 
         .post-content {
-            font-size: 0.92rem;
-            color: #e2e8f0;
-            margin-bottom: 14px;
+            margin-bottom: 15px;
             line-height: 1.5;
+            font-size: 0.95rem;
         }
 
-        .post-media {
+        .post-media img {
             width: 100%;
-            border-radius: 14px;
-            overflow: hidden;
-            margin-bottom: 14px;
-            max-height: 400px;
-            background: #000;
-        }
-
-        .post-media img, .post-media video {
-            width: 100%;
-            height: 100%;
+            max-height: 450px;
             object-fit: cover;
-            display: block;
+            border-radius: 8px;
+            margin-bottom: 15px;
         }
 
         .post-footer-actions {
             display: flex;
-            justify-content: space-between;
+            gap: 15px;
             border-top: 1px solid var(--border-color);
-            padding-top: 12px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            padding-top: 10px;
         }
 
         .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: transparent;
+            background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            font-weight: 600;
-            transition: color 0.2s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .action-btn:hover {
-            color: var(--accent-blue);
+            color: var(--primary-accent);
         }
 
-        /* Right Sidebar Widgets */
-        .sidebar-right {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .widget-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
+        /* Chat Drawer */
+        .chat-drawer {
+            position: fixed;
+            bottom: 0;
+            right: 20px;
+            width: 320px;
+            background: var(--card-bg);
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
             border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 20px;
-        }
-
-        .widget-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #f8fafc;
-        }
-
-        .notice-item {
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.85rem;
-        }
-
-        .notice-item:last-child {
             border-bottom: none;
         }
 
-        .notice-date {
-            font-size: 0.72rem;
-            color: var(--accent-blue);
-            font-weight: 700;
-            margin-bottom: 2px;
-        }
-
-        /* =========================================================
-           4. LIVE CHAT DRAWER
-           ========================================================= */
-        .chat-drawer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 340px;
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 2000;
-        }
-
         .chat-header {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
+            background: var(--primary);
+            color: white;
             padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 700;
-            cursor: pointer;
         }
 
         .chat-body {
-            height: 240px;
-            padding: 12px;
+            height: 250px;
             overflow-y: auto;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background: rgba(11, 19, 43, 0.95);
+            gap: 8px;
+            background: #FAFAFA;
         }
 
         .chat-msg {
-            max-width: 80%;
             padding: 8px 12px;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 0.85rem;
-            line-height: 1.4;
+            max-width: 85%;
         }
 
         .chat-msg.incoming {
-            background: rgba(255, 255, 255, 0.1);
+            background: #E2E8F0;
             align-self: flex-start;
         }
 
         .chat-msg.outgoing {
-            background: #0284c7;
+            background: var(--primary-accent);
+            color: white;
             align-self: flex-end;
         }
 
         .chat-input-area {
             display: flex;
-            padding: 10px;
-            background: #0f172a;
             border-top: 1px solid var(--border-color);
         }
 
         .chat-input-area input {
-            width: 100%;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: #fff;
-            outline: none;
+            flex: 1;
+            border: none;
+            padding: 10px;
             font-size: 0.85rem;
+            outline: none;
         }
 
         .chat-input-area button {
-            background: #0284c7;
+            background: var(--primary);
+            color: white;
             border: none;
-            color: #fff;
-            padding: 0 14px;
-            border-radius: 10px;
-            margin-left: 8px;
+            padding: 0 15px;
             cursor: pointer;
-        }
-
-        @media (max-width: 1024px) {
-            .dashboard-container { grid-template-columns: 1fr; }
-            .sidebar-left, .sidebar-right { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-overlay"></div>
-
-    <!-- =========================================================
-         HEADER WITH EMBLEM LOGOS
-         ========================================================= -->
-    <header>
-        <a href="home.html" class="logo-badge">
-            <img src="emrs_logo.jpg" alt="EMRS Logo">
-            <div class="logo-text">
-                <span class="logo-title">EMRS Angan</span>
-                <span class="logo-subtitle">Student Portal</span>
-            </div>
-        </a>
-
-        <div class="nav-actions">
-            <button class="nav-icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-            <div class="user-profile-pill">
-                <span id="userNameDisplay" style="font-size: 0.88rem; font-weight: 600;">Loading User...</span>
-            </div>
-            <a href="index.html" class="nav-icon-btn" title="Logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" style="color: #f87171;"></i></a>
-            
-            <a href="home.html" class="logo-badge" style="background: rgba(255,255,255,0.95);">
-                <img src="msa_logo.gif" alt="MSA Logo">
-                <div class="logo-text">
-                    <span class="logo-title">MSA</span>
-                    <span class="logo-subtitle">Muni Seva Ashram</span>
-                </div>
-            </a>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fa-solid fa-graduation-cap"></i> EMRS Angan
         </div>
-    </header>
+        <div class="user-profile">
+            <span id="userNameDisplay">Loading...</span>
+            <button class="btn-logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
 
-    <!-- =========================================================
-         MAIN 3-COLUMN DASHBOARD BODY
-         ========================================================= -->
-    <div class="dashboard-container">
-        
-        <!-- 1. LEFT SIDEBAR -->
-        <div class="sidebar-left">
-            <a href="home.html" class="menu-item active"><i class="fa-solid fa-house"></i> Home Feed</a>
-            <a href="reels.html" class="menu-item"><i class="fa-solid fa-video"></i> Short Videos Reel</a>
-            <a href="clubs.html" class="menu-item"><i class="fa-solid fa-users"></i> Student Clubs</a>
-            <a href="hostel.html" class="menu-item"><i class="fa-solid fa-building-columns"></i> Hostel Life</a>
-            <a href="gallery.html" class="menu-item"><i class="fa-solid fa-images"></i> Media Gallery</a>
-            <a href="profile.html" class="menu-item"><i class="fa-solid fa-user"></i> My Profile</a>
+    <!-- MAIN FEED CONTAINER -->
+    <div class="container">
+
+        <!-- CREATE POST CARD -->
+        <div class="create-post-card">
+            <textarea id="postContentInput" placeholder="Share updates, notices, or media with EMRS Angan..."></textarea>
+            <div class="post-actions">
+                <label class="file-upload-btn">
+                    <i class="fa-solid fa-image"></i> Attach Image/Video
+                    <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;">
+                </label>
+                <button class="btn-post" onclick="createNewPost()"><i class="fa-solid fa-paper-plane"></i> Publish</button>
+            </div>
         </div>
 
-        <!-- 2. CENTER FEED & EMBLEM BANNER -->
-        <div class="feed-container">
-            
-            <!-- Institutional Emblem Crest Hero Banner -->
-            <div class="hero-crest-card">
-                <img src="EMRS–MSA Institutional Emblem Crest.png" alt="EMRS-MSA Institutional Emblem Crest">
-                <h2>EMRS Angan &bull; Muni Seva Ashram</h2>
-                <p>&ldquo;Knowledge that Liberates&rdquo; &mdash; Official Campus Collaborative Network[cite: 4]</p>
-            </div>
-
-            <!-- Post Creator Card -->
-            <div class="create-post-card">
-                <div class="create-post-input">
-                    <textarea id="postContentInput" placeholder="Share an update, research insight, or media with EMRS Angan..."></textarea>
-                </div>
-                <div class="create-post-actions">
-                    <div class="upload-options">
-                        <label class="upload-btn">
-                            <i class="fa-solid fa-image" style="color: #38bdf8;"></i> Photo/Video
-                            <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;">
-                        </label>
-                    </div>
-                    <button class="btn-post-submit" onclick="createNewPost()">Publish Post</button>
-                </div>
-            </div>
-
-            <!-- DYNAMIC POSTS STREAM LOADED FROM SUPABASE -->
-            <div id="postsFeedContainer" style="display: flex; flex-direction: column; gap: 20px;">
-                <!-- Real user posts load here dynamically -->
-                <div class="post-card" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
-                    <p>Loading real posts from Supabase database...</p>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- 3. RIGHT SIDEBAR WIDGETS -->
-        <div class="sidebar-right">
-            <!-- School Notices -->
-            <div class="widget-card">
-                <div class="widget-title"><i class="fa-solid fa-bullhorn" style="color: #38bdf8;"></i> Campus Notices</div>
-                <div class="notice-item">
-                    <div class="notice-date">October 30, 2026</div>
-                    Hostel mess schedule updated for upcoming festival week.
-                </div>
-                <div class="notice-item">
-                    <div class="notice-date">October 28, 2026</div>
-                    Science & Robotics club exhibition registration is now live.
-                </div>
-            </div>
-
-            <!-- Hostel Mess Menu -->
-            <div class="widget-card">
-                <div class="widget-title"><i class="fa-solid fa-utensils" style="color: #6366f1;"></i> Bhojanalay Mess Menu</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-                    <p>🍳 <b>Breakfast:</b> Poha & Masala Chai</p>
-                    <p>🍲 <b>Lunch:</b> Gujarati Thali & Butter Milk</p>
-                    <p>🌙 <b>Dinner:</b> Dal Tadka, Roti & Sweet</p>
-                </div>
-            </div>
+        <!-- POSTS FEED CONTAINER -->
+        <div id="postsFeedContainer">
+            <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading posts...</p>
         </div>
 
     </div>
 
-    <!-- =========================================================
-         LIVE CHAT DRAWER (SUPABASE REALTIME)
-         ========================================================= -->
+    <!-- LIVE CHAT DRAWER -->
     <div class="chat-drawer" id="chatDrawer">
         <div class="chat-header">
             <span><i class="fa-solid fa-comments"></i> EMRS Realtime Chat</span>
@@ -662,8 +337,8 @@
         // =========================================================================
         // 1. SUPABASE CONNECTION CONFIGURATION
         // =========================================================================
-        const SUPABASE_URL = 'https://yykiwrkiddimqcpfuphj.supabase.co';'; // Replace with your Supabase Project URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5a2l3cmtpZGRpbXFjcGZ1cGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNzI1MTksImV4cCI6MjEwODk0ODUxOX0.GlILZlDk73JS9ZLatv5B-zQU6IUeNHe4Dp8fsMgcX7E'; // Replace with your Supabase Anon Public Key
+        const SUPABASE_URL = '[https://yykiwrkiddimqcpfuphj.supabase.co](https://yykiwrkiddimqcpfuphj.supabase.co)';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5a2l3cmtpZGRpbXFjcGZ1cGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNzI1MTksImV4cCI6MjEwODk0ODUxOX0.GlILZlDk73JS9ZLatv5B-zQU6IUeNHe4Dp8fsMgcX7E';
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -673,8 +348,6 @@
         async function checkAuthSession() {
             const { data: { session }, error } = await _supabase.auth.getSession();
             if (!session) {
-                // If not logged in, redirect back to login page
-                // window.location.href = 'index.html';
                 currentUser = { email: 'student@emrsangan.edu.in', user_metadata: { full_name: 'Kunjan (Student)' } };
             } else {
                 currentUser = session.user;
@@ -700,21 +373,7 @@
 
             if (error) {
                 console.error('Error fetching posts:', error);
-                // Fallback demo post if table is not yet created in Supabase
-                feedContainer.innerHTML = `
-                    <div class="post-card">
-                        <div class="post-header">
-                            <div class="post-user-info">
-                                <div>
-                                    <div class="post-author">Kunjan (Class 11 Science)</div>
-                                    <div class="post-time">Just now</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="post-content">
-                            Welcome to EMRS Angan! Connect your Supabase project credentials in home.html to load live posts from real users. 🚀
-                        </div>
-                    </div>`;
+                feedContainer.innerHTML = `<p style="color: red; text-align: center;">Failed to load posts: ${error.message}</p>`;
                 return;
             }
 
@@ -731,12 +390,12 @@
                     <div class="post-header">
                         <div class="post-user-info">
                             <div>
-                                <div class="post-author">${post.author_name || 'EMRS User'}</div>
+                                <div class="post-author">${escapeHTML(post.author_name || 'EMRS User')}</div>
                                 <div class="post-time">${new Date(post.created_at).toLocaleString()}</div>
                             </div>
                         </div>
                     </div>
-                    <div class="post-content">${escapeHTML(post.content)}</div>
+                    <div class="post-content">${escapeHTML(post.content || '')}</div>
                     ${post.media_url ? `<div class="post-media"><img src="${post.media_url}" alt="Post media"></div>` : ''}
                     <div class="post-footer-actions">
                         <button class="action-btn"><i class="fa-solid fa-heart"></i> ${post.likes_count || 0} Likes</button>
@@ -804,7 +463,6 @@
         // 4. SUPABASE REALTIME CHAT
         // =========================================================================
         function initSupabaseChat() {
-            // Subscribe to realtime changes on 'chats' table
             const chatChannel = _supabase.channel('public:chats');
             
             chatChannel
@@ -813,7 +471,6 @@
                 })
                 .subscribe();
 
-            // Fetch initial recent chat messages
             fetchInitialChats();
         }
 
@@ -861,6 +518,7 @@
 
         async function handleLogout() {
             await _supabase.auth.signOut();
+            window.location.href = 'login.html';
         }
 
         function escapeHTML(str) {
