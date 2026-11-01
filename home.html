@@ -687,13 +687,16 @@
         // =========================================================================
         // 2. FETCH REAL POSTS FROM SUPABASE
         // =========================================================================
+        // =========================================================================
+        // 2. FETCH REAL POSTS FROM SUPABASE (WITH COMMENTS & LIKES)
+        // =========================================================================
         async function fetchRealPosts() {
             const feedContainer = document.getElementById('postsFeedContainer');
             
-            // Query Supabase 'posts' table ordered by newest first
+            // Query Supabase 'posts' table along with their comments
             const { data: posts, error } = await _supabase
                 .from('posts')
-                .select('*')
+                .select('*, post_comments(*)')
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -709,6 +712,7 @@
 
             feedContainer.innerHTML = '';
             posts.forEach(post => {
+                const commentsList = post.post_comments || [];
                 const postEl = document.createElement('div');
                 postEl.className = 'post-card';
                 postEl.innerHTML = `
@@ -722,13 +726,145 @@
                     </div>
                     <div class="post-content">${escapeHTML(post.content || '')}</div>
                     ${post.media_url ? `<div class="post-media"><img src="${post.media_url}" alt="Post media"></div>` : ''}
+                    
+                    <!-- CONNECTED INTERACTIVE BUTTONS -->
                     <div class="post-footer-actions">
-                        <button class="action-btn"><i class="fa-solid fa-heart"></i> ${post.likes_count || 0} Likes</button>
-                        <button class="action-btn"><i class="fa-solid fa-comment"></i> Comment</button>
-                        <button class="action-btn"><i class="fa-solid fa-share"></i> Share</button>
+                        <button class="action-btn" onclick="handleLikePost(${post.id}, ${post.likes_count || 0})">
+                            <i class="fa-solid fa-heart" style="color: #f87171;"></i> ${post.likes_count || 0} Likes
+                        </button>
+                        <button class="action-btn" onclick="toggleCommentBox(${post.id})">
+                            <i class="fa-solid fa-comment"></i> ${commentsList.length} Comments
+                        </button>
+                        <button class="action-btn" onclick="handleSharePost(${post.id})">
+                            <i class="fa-solid fa-share"></i> Share
+                        </button>
+                    </div>
+
+                    <!-- COLLAPSIBLE COMMENT BOX -->
+                    <div id="commentBox-${post.id}" style="display: none; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                        <div style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;">
+                            ${commentsList.length === 0 ? '<p style="font-size: 0.8rem; color: var(--text-muted);">No comments yet. Be the first to reply!</p>' : ''}
+                            ${commentsList.map(c => `
+                                <div style="font-size: 0.85rem; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 10px;">
+                                    <b style="color: var(--accent-blue);">${escapeHTML(c.author_name)}:</b> ${escapeHTML(c.comment_text)}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="commentInput-${post.id}" placeholder="Write a comment..." style="flex: 1; padding: 8px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; font-size: 0.85rem; outline: none;">
+                            <button onclick="handleAddComment(${post.id})" style="background: #0284c7; color: white; border: none; padding: 0 14px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Post</button>
+                        </div>
                     </div>
                 `;
                 feedContainer.appendChild(postEl);
+            });
+        }
+
+        // =========================================================================
+        // 3. CREATE & UPLOAD NEW POST TO SUPABASE
+        // =========================================================================
+        async function createNewPost() {
+            const contentText = document.getElementById('postContentInput').value.trim();
+            const fileInput = document.getElementById('mediaFileInput').files[0];
+
+            if (!contentText && !fileInput) {
+                alert('Please write something or attach media to post.');
+                return;
+            }
+
+            let mediaUrl = null;
+
+            // If user attached an image/video, upload to Supabase Storage bucket ('post_media')
+            if (fileInput) {
+                const fileName = `${Date.now()}_${fileInput.name}`;
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('post_media')
+                    .upload(fileName, fileInput);
+
+                if (uploadError) {
+                    console.error('Storage upload error:', uploadError);
+                    alert('Error uploading media file: ' + uploadError.message);
+                    return;
+                } else {
+                    const { data: publicUrlData } = _supabase.storage
+                        .from('post_media')
+                        .getPublicUrl(fileName);
+                    mediaUrl = publicUrlData.publicUrl;
+                }
+            }
+
+            // Insert post into Supabase 'posts' table
+            const { error: insertError } = await _supabase
+                .from('posts')
+                .insert([{
+                    author_name: currentUser.user_metadata?.full_name || currentUser.email,
+                    content: contentText,
+                    media_url: mediaUrl,
+                    likes_count: 0
+                }]);
+
+            if (insertError) {
+                console.error('Post insertion error:', insertError);
+                alert('Failed to publish post. Ensure Supabase "posts" table is created.');
+            } else {
+                document.getElementById('postContentInput').value = '';
+                document.getElementById('mediaFileInput').value = '';
+                fetchRealPosts(); // Refresh feed
+            }
+        }
+
+        // =========================================================================
+        // 4. INTERACTION HANDLERS (LIKE, COMMENT, SHARE)
+        // =========================================================================
+        async function handleLikePost(postId, currentLikes) {
+            const newCount = currentLikes + 1;
+            const { error } = await _supabase
+                .from('posts')
+                .update({ likes_count: newCount })
+                .eq('id', postId);
+
+            if (!error) {
+                fetchRealPosts();
+            }
+        }
+
+        function toggleCommentBox(postId) {
+            const box = document.getElementById(`commentBox-${postId}`);
+            if (box) {
+                box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        async function handleAddComment(postId) {
+            const input = document.getElementById(`commentInput-${postId}`);
+            const commentText = input.value.trim();
+            if (!commentText) return;
+
+            const authorName = currentUser.user_metadata?.full_name || currentUser.email;
+
+            const { error } = await _supabase
+                .from('post_comments')
+                .insert([{
+                    post_id: postId,
+                    author_name: authorName,
+                    comment_text: commentText
+                }]);
+
+            if (error) {
+                console.error('Error adding comment:', error);
+                alert('Failed to post comment.');
+            } else {
+                input.value = '';
+                fetchRealPosts();
+            }
+        }
+
+        function handleSharePost(postId) {
+            const shareUrl = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Post link copied to clipboard!');
+            }).catch(() => {
+                alert('Share link: ' + shareUrl);
             });
         }
 
