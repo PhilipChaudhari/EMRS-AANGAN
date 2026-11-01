@@ -684,18 +684,16 @@
             initSupabaseChat();
         }
 
-        
-        
-         // =========================================================================
-        // 2. FETCH REAL POSTS FROM SUPABASE
+        // =========================================================================
+        // 2. FETCH REAL POSTS FROM SUPABASE (WITH LIKES & COMMENTS)
         // =========================================================================
         async function fetchRealPosts() {
             const feedContainer = document.getElementById('postsFeedContainer');
             
-            // Query Supabase 'posts' table along with their comments
+            // Query Supabase 'posts' table along with their comments and likes
             const { data: posts, error } = await _supabase
                 .from('posts')
-                .select('*, post_comments(*)')
+                .select('*, post_comments(*), post_likes(*)')
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -709,9 +707,16 @@
                 return;
             }
 
+            const currentUserEmail = currentUser?.email || 'student@emrsangan.edu.in';
+
             feedContainer.innerHTML = '';
             posts.forEach(post => {
                 const commentsList = post.post_comments || [];
+                const likesList = post.post_likes || [];
+                
+                const userHasLiked = likesList.some(l => l.user_identifier === currentUserEmail);
+                const actualLikeCount = likesList.length;
+
                 const postEl = document.createElement('div');
                 postEl.className = 'post-card';
                 postEl.innerHTML = `
@@ -726,10 +731,11 @@
                     <div class="post-content">${escapeHTML(post.content || '')}</div>
                     ${post.media_url ? `<div class="post-media"><img src="${post.media_url}" alt="Post media"></div>` : ''}
                     
-                    <!-- CONNECTED INTERACTIVE BUTTONS -->
+                    <!-- CONNECTED INTERACTIVE BUTTONS WITH DYNAMIC LIKE COLOR & COUNT -->
                     <div class="post-footer-actions">
-                        <button class="action-btn" onclick="handleLikePost(${post.id}, ${post.likes_count || 0})">
-                            <i class="fa-solid fa-heart" style="color: #f87171;"></i> ${post.likes_count || 0} Likes
+                        <button class="action-btn" onclick="handleLikePost(${post.id})">
+                            <i class="fa-${userHasLiked ? 'solid' : 'regular'} fa-heart" style="color: ${userHasLiked ? '#ef4444' : 'inherit'};"></i> 
+                            <span>${actualLikeCount}</span> Likes
                         </button>
                         <button class="action-btn" onclick="toggleCommentBox(${post.id})">
                             <i class="fa-solid fa-comment"></i> ${commentsList.length} Comments
@@ -773,7 +779,6 @@
 
             let mediaUrl = null;
 
-            // If user attached an image/video, upload to Supabase Storage bucket ('post_media')
             if (fileInput) {
                 const fileName = `${Date.now()}_${fileInput.name}`;
                 const { data: uploadData, error: uploadError } = await _supabase.storage
@@ -792,7 +797,6 @@
                 }
             }
 
-            // Insert post into Supabase 'posts' table
             const { error: insertError } = await _supabase
                 .from('posts')
                 .insert([{
@@ -808,14 +812,14 @@
             } else {
                 document.getElementById('postContentInput').value = '';
                 document.getElementById('mediaFileInput').value = '';
-                fetchRealPosts(); // Refresh feed
+                fetchRealPosts();
             }
         }
 
-         // =========================================================================
-        // SMART TOGGLE LIKE HANDLER (One like per user)
         // =========================================================================
-        async function handleLikePost(postId, currentLikes) {
+        // 4. SMART TOGGLE LIKE HANDLER (One like per user)
+        // =========================================================================
+        async function handleLikePost(postId) {
             if (!currentUser) {
                 alert('Please sign in to like posts.');
                 return;
@@ -823,106 +827,80 @@
 
             const userIdentifier = currentUser.email;
 
-            // 1. Check if this user already liked this post
-            const { data: existingLike, error: checkError } = await _supabase
+            // Check if user already liked this post
+            const { data: existingLikes, error: checkError } = await _supabase
                 .from('post_likes')
-                .select('*')
+                .select('id')
                 .eq('post_id', postId)
-                .eq('user_identifier', userIdentifier)
-                .maybeSingle();
+                .eq('user_identifier', userIdentifier);
 
             if (checkError) {
                 console.error('Error checking like status:', checkError);
                 return;
             }
 
-            let newCount = currentLikes;
-
-            if (existingLike) {
-                // ALREADY LIKED: Unlike it (Remove row, decrease count)
+            if (existingLikes && existingLikes.length > 0) {
+                // Unlike: Delete record
                 await _supabase
                     .from('post_likes')
                     .delete()
                     .eq('post_id', postId)
                     .eq('user_identifier', userIdentifier);
-
-                newCount = Math.max(0, currentLikes - 1);
             } else {
-                // NOT LIKED YET: Like it (Insert row, increase count)
+                // Like: Insert record
                 await _supabase
                     .from('post_likes')
                     .insert([{ post_id: postId, user_identifier: userIdentifier }]);
-
-                newCount = currentLikes + 1;
             }
 
-            // 2. Update the main posts table with the new count
-            const { error: updateError } = await _supabase
-                .from('posts')
-                .update({ likes_count: newCount })
-                .eq('id', postId);
+            fetchRealPosts();
+        }
 
-            if (updateError) {
-                console.error('Error updating post like count:', updateError);
-            } else {
-                fetchRealPosts(); // Refresh feed to display updated count
+        // Helper to toggle comment section visibility
+        function toggleCommentBox(postId) {
+            const box = document.getElementById(`commentBox-${postId}`);
+            if (box) {
+                box.style.display = box.style.display === 'none' ? 'block' : 'none';
             }
         }
 
-        // =========================================================================
-        // 3. CREATE & UPLOAD NEW POST TO SUPABASE
-        // =========================================================================
-        async function createNewPost() {
-            const contentText = document.getElementById('postContentInput').value.trim();
-            const fileInput = document.getElementById('mediaFileInput').files[0];
+        // Helper to add a comment
+        async function handleAddComment(postId) {
+            const input = document.getElementById(`commentInput-${postId}`);
+            const commentText = input.value.trim();
+            if (!commentText) return;
 
-            if (!contentText && !fileInput) {
-                alert('Please write something or attach media to post.');
-                return;
-            }
+            const authorName = currentUser.user_metadata?.full_name || currentUser.email;
 
-            let mediaUrl = null;
-
-            // If user attached an image/video, upload to Supabase Storage bucket ('post_media')
-            if (fileInput) {
-                const fileName = `${Date.now()}_${fileInput.name}`;
-                const { data: uploadData, error: uploadError } = await _supabase.storage
-                    .from('post_media')
-                    .upload(fileName, fileInput);
-
-                if (uploadError) {
-                    console.error('Storage upload error:', uploadError);
-                    alert('Error uploading media file.');
-                } else {
-                    const { data: publicUrlData } = _supabase.storage
-                        .from('post_media')
-                        .getPublicUrl(fileName);
-                    mediaUrl = publicUrlData.publicUrl;
-                }
-            }
-
-            // Insert post into Supabase 'posts' table
-            const { error: insertError } = await _supabase
-                .from('posts')
+            const { error } = await _supabase
+                .from('post_comments')
                 .insert([{
-                    author_name: currentUser.user_metadata?.full_name || currentUser.email,
-                    content: contentText,
-                    media_url: mediaUrl,
-                    likes_count: 0
+                    post_id: postId,
+                    author_name: authorName,
+                    comment_text: commentText
                 }]);
 
-            if (insertError) {
-                console.error('Post insertion error:', insertError);
-                alert('Failed to publish post. Ensure Supabase "posts" table is created.');
+            if (error) {
+                console.error('Error adding comment:', error);
+                alert('Failed to post comment.');
             } else {
-                document.getElementById('postContentInput').value = '';
-                document.getElementById('mediaFileInput').value = '';
-                fetchRealPosts(); // Refresh feed
+                input.value = '';
+                fetchRealPosts();
             }
         }
 
+        // Helper to share post
+        function handleSharePost(postId) {
+            const shareUrl = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Post link copied to clipboard!');
+            }).catch(() => {
+                alert('Share link: ' + shareUrl);
+            });
+        }
+
         // =========================================================================
-        // 4. SUPABASE REALTIME CHAT
+        // 5. SUPABASE REALTIME CHAT
         // =========================================================================
         function initSupabaseChat() {
             const chatChannel = _supabase.channel('public:chats');
